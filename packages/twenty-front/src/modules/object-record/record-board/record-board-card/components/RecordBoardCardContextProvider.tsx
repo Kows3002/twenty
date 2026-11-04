@@ -3,6 +3,7 @@ import { useContext } from 'react';
 
 import { RecordBoardCardHotkeysEffect } from '@/object-record/record-board/record-board-card/components/RecordBoardCardHotkeysEffect';
 import { useIsRecordReadOnly } from '@/object-record/read-only/hooks/useIsRecordReadOnly';
+import { useIsRecordFieldReadOnly } from '@/object-record/read-only/hooks/useIsRecordFieldReadOnly';
 import { RecordBoardColumnContext } from '@/object-record/record-board/record-board-column/contexts/RecordBoardColumnContext';
 import { RecordBoardContext } from '@/object-record/record-board/contexts/RecordBoardContext';
 import { RecordBoardCard } from '@/object-record/record-board/record-board-card/components/RecordBoardCard';
@@ -36,7 +37,8 @@ export const RecordBoardCardContextProvider = ({
   rowIndex,
   group,
 }: RecordBoardCardContextProviderProps) => {
-  const { objectMetadataItem } = useContext(RecordBoardContext);
+  const { objectMetadataItem, selectFieldMetadataItem } =
+    useContext(RecordBoardContext);
   const { columnIndex } = useContext(RecordBoardColumnContext);
 
   const isRecordReadOnlyFromPermissions = useIsRecordReadOnly({
@@ -51,6 +53,12 @@ export const RecordBoardCardContextProvider = ({
   const isRecordReadOnly =
     isRecordBoardCellsNonEditable || isRecordReadOnlyFromPermissions;
 
+  const isGroupFieldReadOnly = useIsRecordFieldReadOnly({
+    recordId,
+    objectMetadataId: objectMetadataItem.id,
+    fieldMetadataId: selectFieldMetadataItem.id,
+  });
+
   const isRecordBoardCardFocused = useAtomComponentFamilyStateValue(
     isRecordBoardCardFocusedComponentFamilyState,
     {
@@ -63,6 +71,9 @@ export const RecordBoardCardContextProvider = ({
     isRecordBoardDropProcessingComponentState,
   );
 
+  const isDragDisabled =
+    isRecordBoardDropProcessing || isRecordReadOnly || isGroupFieldReadOnly;
+
   return (
     <RecordBoardCardContext.Provider
       value={{ recordId, isRecordReadOnly, rowIndex, columnIndex }}
@@ -74,12 +85,10 @@ export const RecordBoardCardContextProvider = ({
         type={RECORD_BOARD_CARD_DND_TYPE}
         accept={RECORD_BOARD_CARD_DND_TYPE}
         data={{ recordId }}
-        disabled={isRecordBoardDropProcessing || isRecordBoardCellsNonEditable}
+        disabled={isDragDisabled}
       >
         <StyledDraggableContainer
-          isDragDisabled={
-            isRecordBoardDropProcessing || isRecordBoardCellsNonEditable
-          }
+          isDragDisabled={isDragDisabled}
           id={`record-board-card-${columnIndex}-${rowIndex}`}
           data-selectable-id={recordId}
           data-select-disable

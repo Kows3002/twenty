@@ -15,7 +15,7 @@ type RecordBoardContextProps = {
   }: {
     idToUpdate: string;
     updateOneRecordInput: Partial<Omit<ObjectRecord, 'id'>>;
-  }) => void;
+  }) => Promise<unknown>;
   deleteOneRecord: (idToDelete: string) => Promise<unknown>;
   recordBoardId: string;
   objectPermissions: ObjectPermissionsWithObjectMetadataId;
