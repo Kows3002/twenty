@@ -63,7 +63,7 @@ const BoardHeaderExample = () => (
         objectMetadataItem: company,
         selectFieldMetadataItem: field,
         createOneRecord: () => {},
-        updateOneRecord: () => {},
+        updateOneRecord: async () => {},
         deleteOneRecord: async () => {},
         recordBoardId: BOARD_ID,
         objectPermissions: getDefaultObjectPermissions(company.id),

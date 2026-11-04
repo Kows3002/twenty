@@ -52,7 +52,7 @@ export const useProcessBoardCardDrop = () => {
   );
 
   const processBoardCardDrop = useCallback(
-    ({
+    async ({
       draggedRecordId,
       sourceDroppableId,
       destinationDroppableId,
@@ -93,8 +93,9 @@ export const useProcessBoardCardDrop = () => {
           store,
         });
 
+        // Finish each move before the next one snapshots its source column for rollback.
         for (const { id, position } of updatedRecords) {
-          updateDroppedRecordOnBoard(
+          await updateDroppedRecordOnBoard(
             { recordId: id, position: hasRecordSorts ? undefined : position },
             destinationRecordGroup.value,
           );

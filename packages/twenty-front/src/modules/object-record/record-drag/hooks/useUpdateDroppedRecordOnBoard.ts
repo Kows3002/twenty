@@ -33,7 +33,7 @@ export const useUpdateDroppedRecordOnBoard = () => {
   const { upsertRecordsInStore } = useUpsertRecordsInStore();
 
   const updateDroppedRecordOnBoard = useCallback(
-    (
+    async (
       {
         recordId,
         position: newPosition,
@@ -174,13 +174,47 @@ export const useUpdateDroppedRecordOnBoard = () => {
         ],
       });
 
-      updateOneRecord({
-        idToUpdate: recordId,
-        updateOneRecordInput: {
-          [recordGroupColumnName]: targetRecordGroupValue,
-          ...(isDefined(newPosition) && { position: newPosition }),
-        },
-      });
+      try {
+        await updateOneRecord({
+          idToUpdate: recordId,
+          updateOneRecordInput: {
+            [recordGroupColumnName]: targetRecordGroupValue,
+            ...(isDefined(newPosition) && { position: newPosition }),
+          },
+        });
+      } catch (error) {
+        upsertRecordsInStore({
+          partialRecords: [
+            {
+              id: recordId,
+              __typename:
+                (initialRecord as { __typename?: string }).__typename ??
+                'Record',
+              [recordGroupColumnName]: initialRecord[recordGroupColumnName],
+              ...(isDefined(newPosition) && {
+                position: initialRecord.position,
+              }),
+            },
+          ],
+        });
+
+        if (!movingInsideSameRecordGroup) {
+          store.set(
+            recordIndexRecordIdsByGroupCallbackFamilyState(targetRecordGroupId),
+            (recordIds) => recordIds.filter((id) => id !== recordId),
+          );
+        }
+
+        store.set(
+          recordIndexRecordIdsByGroupCallbackFamilyState(initialRecordGroupId),
+          (recordIds) =>
+            recordIds
+              .filter((id) => id !== recordId)
+              .toSpliced(indexOfDroppedRecordInInitialRecordGroup, 0, recordId),
+        );
+
+        throw error;
+      }
     },
     [
       recordGroupDefinitions,
